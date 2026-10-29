@@ -10,8 +10,8 @@ def download_data(ticker: str = DEFAULT_TICKER, start: str = DEFAULT_START) -> N
                           " check ticker or connection.")
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     df.to_csv(DATA_DIR / f"{ticker.lower()}.csv")
-    print("Download succesful.")
+    print("Download successful.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     download_data()
