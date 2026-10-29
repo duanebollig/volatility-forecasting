@@ -2,6 +2,7 @@ from typing import cast
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from config import DATA_DIR, DEFAULT_TICKER
 
@@ -11,13 +12,24 @@ def load_data(ticker: str = DEFAULT_TICKER) -> pd.DataFrame:
     return df
 
 
-def log_returns_close(sr: pd.Series) -> pd.Series:
-    prev_sr = sr.shift(1)
-    log_returns = np.log(sr) - np.log(prev_sr)
-    log_returns = cast(pd.Series, log_returns)
-    return log_returns
+def log_returns(prices: pd.Series) -> pd.Series:
+    prev_prices = prices.shift(1)
+    result = np.log(prices) - np.log(prev_prices)
+    return cast(pd.Series, result)
+
+
+def squared_returns(returns: pd.Series) -> pd.Series:
+    return returns ** 2
 
 
 if __name__ == "__main__":
     df = load_data()
-    print(log_returns_close(df["Close"]).head())
+    returns = log_returns(df["Close"])
+    squared = squared_returns(returns)
+    print(squared.idxmax())
+    fig, ax = plt.subplots()
+    ax.plot(np.sqrt(squared), lw=0.5)
+    ax.set_yscale("log")
+    ax.set_title("Daily Volatility")
+    ax.set_ylabel("daily vol, log return")
+    plt.show()
