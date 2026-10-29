@@ -1,9 +1,6 @@
-from pathlib import Path
 import yfinance as yf
 
-DEFAULT_TICKER = 'SPY'
-DEFAULT_START = '2000-01-01'
-DATA_DIR = Path(__file__).parent / "data"
+from config import DATA_DIR, DEFAULT_TICKER, DEFAULT_START
 
 
 def download_data(ticker: str = DEFAULT_TICKER, start: str = DEFAULT_START) -> None:
@@ -13,6 +10,7 @@ def download_data(ticker: str = DEFAULT_TICKER, start: str = DEFAULT_START) -> N
                           " check ticker or connection.")
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     df.to_csv(DATA_DIR / f"{ticker.lower()}.csv")
+    print("Download succesful.")
 
 
 if __name__ == '__main__':
