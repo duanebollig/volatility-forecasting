@@ -1,4 +1,7 @@
+from collections.abc import Callable
+
 import numpy as np
+import pandas as pd
 
 from config import INITIAL_TRAIN_SIZE, BLOCK_SIZE, DEFAULT_HORIZON
 
@@ -20,3 +23,19 @@ def walk_forward_splits(
         result.append((train_range, test_range))
         test_start += block_size
     return result
+
+
+def run_walk_forward(
+    model: Callable[[pd.DataFrame, pd.Series, pd.DataFrame], pd.Series],
+    X: pd.DataFrame,
+    y: pd.Series,
+    splits: list[tuple[np.ndarray, np.ndarray]],
+) -> pd.Series:
+    preds = []
+    for train, test in splits:
+        X_train = X.iloc[train]
+        y_train = y.iloc[train]
+        X_test = X.iloc[test]
+        result = model(X_train, y_train, X_test)
+        preds.append(result)
+    return pd.concat(preds)

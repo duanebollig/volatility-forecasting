@@ -1,7 +1,9 @@
 import numpy as np
+import pandas as pd
 import pytest
 
-from walk_forward import walk_forward_splits
+from walk_forward import walk_forward_splits, run_walk_forward
+from models import naive_predict
 
 
 @pytest.fixture
@@ -10,6 +12,24 @@ def splits():
         n_rows=100, initial_train_size=20,
         block_size=10, horizon=5,
     )
+
+
+@pytest.fixture
+def toy_x():
+    n = 100
+    return pd.DataFrame(
+        {
+            "daily": np.arange(n) + 0.0,
+            "weekly": np.arange(n) + 1000.0,
+            "monthly": np.arange(n) + 2000.0,
+        },
+        index=pd.date_range("2020-01-01", periods=n, freq="B"),
+    )
+
+
+@pytest.fixture
+def toy_y(toy_x):
+    return pd.Series(np.arange(100) + 5000.0, index=toy_x.index)
 
 
 def test_no_room_for_test_raises():
@@ -83,3 +103,9 @@ def test_loop_stops_when_test_start_passes_end():
     assert len(splits) == 7
     _, test = splits[-1]
     assert np.array_equal(test, np.arange(84, 92))
+
+
+def test_run_naive_matches_weekly(splits, toy_x, toy_y):
+    result = run_walk_forward(naive_predict, toy_x, toy_y, splits)
+    expected = toy_x["weekly"].iloc[24:]
+    pd.testing.assert_series_equal(result, expected)
