@@ -4,13 +4,14 @@ import pandas as pd
 
 from features import build_dataset
 from walk_forward import walk_forward_splits, run_walk_forward
-from models import naive_predict, har_predict
+from models import naive_predict, har_predict, lgbm_predict
 from metrics import compute_rmse, compute_qlike
 
 
 models = {
     "naive": naive_predict,
     "har": har_predict,
+    "lgbm": lgbm_predict,
 }
 
 def build_table(
