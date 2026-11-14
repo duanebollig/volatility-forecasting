@@ -65,3 +65,10 @@ def test_har_output_index_matches_test_index(x_train_har, y_train, x_test):
 def test_har_recovers_known_equation(x_train_har, y_train, x_test):
     result = har_predict(x_train_har, y_train, x_test)
     pd.testing.assert_series_equal(result, x_test @ np.array([2.0, 3.0, 4.0]) + 1, check_exact=False)
+
+
+def test_har_floors_predictions_below_train_min(x_train_har, x_test):
+    y_train = x_train_har @ np.array([-5, 0, 0]) + 100
+    result = har_predict(x_train_har, y_train, x_test)
+    assert np.isclose(y_train.min(), result).any()
+    assert (result >= y_train.min()).all()

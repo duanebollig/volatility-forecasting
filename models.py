@@ -25,5 +25,8 @@ def har_predict(
         X_test[["daily", "weekly", "monthly"]].to_numpy(),
     ))
     preds = pd.Series(A_test @ beta, index=X_test.index)
+    count = (preds < y_train.min()).sum()
+    if count > 0:
+        print(f"Number of predictions floored: {count}")
     preds = preds.clip(lower=y_train.min())
     return preds
