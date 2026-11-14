@@ -31,15 +31,21 @@ On any given day t, the models see the same three inputs: average squared log re
 
 - **daily**: today's squared log return,
 
-  $$\text{daily}_t = r_t^2$$
+  ```math
+  \text{daily}_t = r_t^2
+  ```
 
 - **weekly**: the average of the last 5 squared log returns,
 
-  $$\text{weekly}_t = \frac{1}{5}\sum_{i=0}^{4}r_{t-i}^2$$
+  ```math
+  \text{weekly}_t = \frac{1}{5}\sum_{i=0}^{4}r_{t-i}^2
+  ```
 
 - **monthly**: the average of the last 22 squared log returns,
 
-  $$\text{monthly}_t = \frac{1}{22}\sum_{i=0}^{21}r_{t-i}^2$$
+  ```math
+  \text{monthly}_t = \frac{1}{22}\sum_{i=0}^{21}r_{t-i}^2
+  ```
 
 These windows come from the HAR model (Corsi, 2009).[^corsi] Corsi argues that volatility holds important information at each scale because traders think on different horizons, so volatility changes fast on the daily, slow on the monthly, and intermediate on the weekly. Together, they let the forecast react quickly to shocks without forgetting the longer regime. For example:
 
