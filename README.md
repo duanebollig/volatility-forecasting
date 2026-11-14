@@ -8,7 +8,9 @@ In the market, the direction of returns is *close to unpredictable*. Market vari
 Daily SPY closes from 2000-01-01 to 2026-10-28, from yfinance. Closes are dividend- and split- adjusted so returns reflect real price changes, not fake drops on dividend days.
 
 - 6,746 trading days downloaded
+
 - 6,719 rows after building features and target
+
 - 5,315 out-of-sample forecasts (first 1,400 rows train, 4-row gap to prevent look-ahead leakage)
 
 `data/` isn't committed, so run `download.py` first. Re-downloading later adds newer days, so numbers shift slightly.
@@ -28,15 +30,21 @@ For this project, I used a 5-day period to represent a trading week's variance, 
 On any given day t, the models see the same three inputs: average squared log returns over a daily, weekly, and monthly lookback window (1, 5, and 22 trading days respectively).
 
 - **daily**: today's squared log return,
+
   $$\text{daily}_t = r_t^2$$
+
 - **weekly**: the average of the last 5 squared log returns,
+
   $$\text{weekly}_t = \frac{1}{5}\sum_{i=0}^{4}r_{t-i}^2$$
+
 - **monthly**: the average of the last 22 squared log returns,
+
   $$\text{monthly}_t = \frac{1}{22}\sum_{i=0}^{21}r_{t-i}^2$$
 
 These windows come from the HAR model (Corsi, 2009).[^corsi] Corsi argues that volatility holds important information at each scale because traders think on different horizons, so volatility changes fast on the daily, slow on the monthly, and intermediate on the weekly. Together, they let the forecast react quickly to shocks without forgetting the longer regime. For example:
 
 1. **A huge day after a calm month**: daily = high, weekly = medium, monthly = low. So, HAR's forecast rises, but not up to the spike.
+
 2. **A calm day after a chaotic month**: daily = low, weekly = medium, monthly = high. So, HAR's forecast lowers, but not to the calm day's level.
 
 To prevent leakage, features use day t and earlier, while the target starts at t+1.
