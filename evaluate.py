@@ -14,15 +14,25 @@ models = {
     "lgbm": lgbm_predict,
 }
 
-def build_table(
+
+def get_predictions(
     models: dict[str, Callable[[pd.DataFrame, pd.Series, pd.DataFrame], pd.Series]],
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, pd.Series]:
     X, y = build_dataset()
     splits = walk_forward_splits(len(X))
-    rows = []
+    preds = {}
     for name, model in models.items():
-        y_pred = run_walk_forward(model, X, y, splits)
-        y_true = y.loc[y_pred.index]
+        preds[name] = run_walk_forward(model, X, y, splits)
+    df_preds = pd.DataFrame(preds)
+    return df_preds, y.loc[df_preds.index]
+
+
+def build_table(
+    preds: pd.DataFrame,
+    y_true: pd.Series,
+) -> pd.DataFrame:
+    rows = []
+    for name, y_pred in preds.items():
         rows.append({
             "model": name,
             "rmse": compute_rmse(y_true, y_pred),
@@ -32,5 +42,6 @@ def build_table(
     return pd.DataFrame(rows)
 
 if __name__ == "__main__":
-    table = build_table(models)
+    preds, y_true = get_predictions(models)
+    table = build_table(preds, y_true)
     print(table)
