@@ -8,3 +8,4 @@ DEFAULT_START = "2000-01-01"
 DEFAULT_HORIZON = 5
 INITIAL_TRAIN_SIZE = 1400 # dot.com bubble and following 2003 - mid 2005's calm
 BLOCK_SIZE = 22 # trading-monthly refit, useful because HAR refitting is cheap
+HIGH_VOL_QUANTILE = 0.95 # top 5% of target (~266 rows) vs 1% is ~53 rows, mostly 2008 + 2020
