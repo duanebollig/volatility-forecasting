@@ -24,3 +24,22 @@ $$\mathrm{Var}(X+Y) = \mathrm{Var}(X) + \mathrm{Var}(Y) + 2\,\mathrm{Cov}(X,Y) \
 
 For this project, I used a 5-day period to represent a trading week's variance, averaging the 5 readings to express weekly variance as an average daily variance, matching the features' units. Volatilities don't add, so the model works in variance; volatility is only used for display.
 
+## Features
+On any given day t, the models see the same three inputs: average squared log returns over a daily, weekly, and monthly lookback window (1, 5, and 22 trading days respectively).
+
+- **daily**: today's squared log return,
+  $$\text{daily}_t = r_t^2$$
+- **weekly**: the average of the last 5 squared log returns,
+  $$\text{weekly}_t = \frac{1}{5}\sum_{i=0}^{4}r_{t-i}^2$$
+- **monthly**: the average of the last 22 squared log returns,
+  $$\text{monthly}_t = \frac{1}{22}\sum_{i=0}^{21}r_{t-i}^2$$
+
+These windows come from the HAR model (Corsi, 2009).[^corsi] Corsi argues that volatility holds important information at each scale because traders think on different horizons, so volatility changes fast on the daily, slow on the monthly, and intermediate on the weekly. Together, they let the forecast react quickly to shocks without forgetting the longer regime. For example:
+
+1. **A huge day after a calm month**: daily = high, weekly = medium, monthly = low. So, HAR's forecast rises, but not up to the spike.
+2. **A calm day after a chaotic month**: daily = low, weekly = medium, monthly = high. So, HAR's forecast lowers, but not to the calm day's level.
+
+To prevent leakage, features use day t and earlier, while the target starts at t+1.
+
+## References
+[^corsi]: Corsi, F. (2009). "A Simple Approximate Long-Memory Model of Realized Volatility." *Journal of Financial Econometrics*, 7(2), 174–196.
