@@ -1,3 +1,4 @@
+from lightgbm import LGBMRegressor
 import numpy as np
 import pandas as pd
 
@@ -30,3 +31,15 @@ def har_predict(
         print(f"Number of predictions floored: {count}")
     preds = preds.clip(lower=y_train.min())
     return preds
+
+
+def lgbm_predict(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    X_test: pd.DataFrame,
+) -> pd.Series:
+    model = LGBMRegressor(random_state=42, verbose=-1)
+    model.fit(X_train[["daily", "weekly", "monthly"]], y_train)
+    preds = model.predict(X_test[["daily", "weekly", "monthly"]])
+    preds = np.asarray(preds)
+    return pd.Series(preds, index=X_test.index)
