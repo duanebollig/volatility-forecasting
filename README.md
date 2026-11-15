@@ -55,5 +55,24 @@ These windows come from the HAR model (Corsi, 2009).[^corsi] Corsi argues that v
 
 To prevent leakage, features use day t and earlier, while the target starts at t+1.
 
+## Validation
+Every forecast is made using data available on that day. Rows are not randomized to prevent look-ahead leakage *(e.g. a row from 2020 used as training data being used to forecast a row in 2019)*, which makes the scores dishonest by looking better than what a real forecaster could ever achieve. Because of volatility clustering, shuffling would put similar neighboring rows in both training and test, testing the model on days it has effectively already seen.
+
+Training uses an expanding window that always starts at row 0 and grows, never dropping old rows. The initial size of 1,400 rows is a judgment call: from 2000-02-03 to 2005-08-29, the model captures both high and low volatility regimes *(dot-com selloff and 2003-2005 calm respectively)*.
+
+Each fold forecasts the next 22 rows (about a trading month), then those rows join training. Every model is refit from scratch before each block to represent the way a real forecaster learns from everything up to that point and nothing after. In total, 242 folds produce 5,315 forecasts starting on 2005-09-06, with a final partial block of 13 rows.
+
+There's a 4-row gap between the last training row and the first test row for each fold *(the reason training ends on 2005-08-29 but the first forecast is on 2005-09-06)*. This is because each row's target is the average of the next 5 squared returns, so on any forecast day t, row t-1's target averages the squared returns from t through t+4. Since days t+1 to t+4 haven't happened on day t, the newest row whose target is fully known is row t-5. Therefore, training stops at row t-5, and the 4 rows in between are skipped to prevent leakage.
+
+```text
+fold 1    [0 ========== 1399] ···· [1404 ## 1425]
+fold 2    [0 ============= 1421] ···· [1426 ## 1447]
+fold 3    [0 ================ 1443] ···· [1448 ## 1469]
+  ...
+fold 242  [0 ================================ 6701] ···· [6706 # 6718]
+
+= train (expanding)   · gap (4 rows)   # test block (22 rows; last one 13)
+```
+
 ## References
 [^corsi]: Corsi, F. (2009). "A Simple Approximate Long-Memory Model of Realized Volatility." *Journal of Financial Econometrics*, 7(2), 174–196.
