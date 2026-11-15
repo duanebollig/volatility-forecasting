@@ -95,6 +95,21 @@ QLIKE requires $\hat{y}>0$ (the ratio would blow up as $\hat{y}\to0$, and the lo
 
 Since the target is only a noisy estimate of the true variance, that noise can lead a metric to rank a worse model ahead of a better one. RMSE and QLIKE still rank models correctly under that noise, because both are minimized on average by the true variance (Patton, 2011).[^patton] Two metrics are used because they can rank the models differently, so reporting both shows whether a model's win holds on one metric or both.
 
+## Models
+The three models go from simplest to most flexible: a baseline with no learning (naive), a standard benchmark for realized-volatility forecasting (HAR), and a nonlinear ML model (LightGBM). This tests whether added complexity beats a simpler forecast.
+
+**Naive**: It forecasts next week's variance as the weekly feature. It's volatility clustering at its simplest (wild weeks follow wild weeks), so a model that can't beat this baseline hasn't learned anything useful.
+
+**HAR**: Corsi's Heterogeneous Autoregressive model (HAR-RV) for realized volatility:
+
+$$\hat{y}_{t} = \beta_0 + \beta_{d}\text{daily}_{t} + \beta_{w}\text{weekly}_{t} + \beta_{m}\text{monthly}_{t}$$ 
+
+The coefficients $(\beta)$ are fit by OLS on the training rows, refit every fold. Forecasts below the training minimum of $y$ are raised to it (never happened across all 5,315 forecasts). This model uses daily squared returns in place of intraday realized variance from Corsi's model.
+
+**LightGBM**: Nonlinear ML model that uses gradient-boosted regression trees: a sequence of trees, each fit to correct the errors of the ones before it, with their outputs added together.
+
+Its hyperparameters are the defaults (100 trees, 31 leaves, learning rate 0.1, min 20 rows per leaf). The settings were fixed before seeing any results, because choosing them by test score would leak the test data into the model choice. LightGBM can't extrapolate: its splits are thresholds learned from the training data, so inputs beyond the training range get the same forecast as the most extreme training rows, keeping forecasts at about the largest (or smallest) $y$ it has seen.
+
 ## References
 [^corsi]: Corsi, F. (2009). "A Simple Approximate Long-Memory Model of Realized Volatility." *Journal of Financial Econometrics*, 7(2), 174–196.
 [^patton]: Patton, A. J. (2011). "Volatility Forecast Comparison Using Imperfect Volatility Proxies." *Journal of Econometrics*, 160(1), 246–256.
