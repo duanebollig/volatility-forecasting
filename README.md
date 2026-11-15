@@ -74,5 +74,27 @@ fold 242  [0 ================================ 6701] ···· [6706 # 6718]
 = train (expanding)   · gap (4 rows)   # test block (22 rows; last one 13)
 ```
 
+## Metrics
+Each model is scored on the same 5,315 out-of-sample forecasts using RMSE and QLIKE.
+
+**Root Mean Square Error (RMSE)**: This metric shows the typical size of the gap between the forecast and the realized variance.
+
+$$\mathrm{RMSE}=\sqrt{\frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2}$$
+
+Squaring the difference makes every miss positive and big misses count far more, meaning that *the most volatile weeks* dominate the score. Taking the mean and then the root brings the metric back to the target units, so RMSE is in daily-variance units. RMSE is symmetric, so over- and under-forecasts of the same size cost exactly the same.
+
+**Quasi-Likelihood (QLIKE)**: This metric scores each forecast using the ratio of realized to forecast variance, where a perfect forecast scores 0.
+
+$$\mathrm{QLIKE}=\frac{1}{n}\sum_{i=1}^{n}\left(\frac{y_i}{\hat{y}_i} - \ln\left(\frac{y_i}{\hat{y}_i}\right)- 1\right)$$
+
+Because QLIKE uses ratios, each miss is judged relative to that week's level, so a high-volatility week doesn't score worse just because it has bigger numbers. It is also asymmetric as under-forecasting costs more: a forecast at half the realized variance scores 0.307, while one at double scores 0.193. QLIKE makes sense when sizing positions: a low forecast means an oversized position and bigger losses than planned, while a high forecast would only cost some potential gains.
+
+QLIKE requires $\hat{y}>0$ (the ratio would blow up as $\hat{y}\to0$, and the log is undefined for non-positive ratios), which is why HAR's forecasts are floored at the training minimum.
+
+**Why RMSE and QLIKE?**
+
+Since the target is only a noisy estimate of the true variance, that noise can lead a metric to rank a worse model ahead of a better one. RMSE and QLIKE still rank models correctly under that noise, because both are minimized on average by the true variance (Patton, 2011).[^patton] Two metrics are used because they can rank the models differently, so reporting both shows whether a model's win holds on one metric or both.
+
 ## References
 [^corsi]: Corsi, F. (2009). "A Simple Approximate Long-Memory Model of Realized Volatility." *Journal of Financial Econometrics*, 7(2), 174–196.
+[^patton]: Patton, A. J. (2011). "Volatility Forecast Comparison Using Imperfect Volatility Proxies." *Journal of Econometrics*, 160(1), 246–256.
