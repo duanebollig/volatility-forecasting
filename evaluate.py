@@ -10,9 +10,9 @@ from metrics import compute_rmse, compute_qlike
 
 
 models = {
-    "naive": naive_predict,
-    "har": har_predict,
-    "lgbm": lgbm_predict,
+    "Naive": naive_predict,
+    "HAR": har_predict,
+    "LightGBM": lgbm_predict,
 }
 
 
@@ -38,7 +38,6 @@ def build_table(
             "model": name,
             "rmse": compute_rmse(y_true, y_pred),
             "qlike": compute_qlike(y_true, y_pred),
-            "n": len(y_pred),
         })
     return pd.DataFrame(rows)
 
@@ -64,8 +63,6 @@ def build_quantile_table(
             "qlike_rest": compute_qlike(y_true_rest, preds_rest[name]),
             "bias_top": (preds_top[name] - y_true_top).mean(),
             "bias_rest": (preds_rest[name] - y_true_rest).mean(),
-            "n_top": len(preds_top[name]),
-            "n_rest": len(preds_rest[name]),
         })
     return pd.DataFrame(rows)
 
@@ -74,8 +71,15 @@ if __name__ == "__main__":
     preds, y_true = get_predictions(models)
     table = build_table(preds, y_true)
     quantile_table = build_quantile_table(preds, y_true)
-    print(f"Overall ({len(y_true)} out-of-sample forecasts)")
-    print(table.to_string(index=False))
-    print(f"\nTop {1 - HIGH_VOL_QUANTILE:.0%} target rows "
-          f"(y >= {HIGH_VOL_QUANTILE * 100:.0f}th percentile) vs. rest")
-    print(quantile_table.to_string(index=False))
+
+    print(f"---({len(y_true):,} out-of-sample forecasts)---")
+    print(table.to_markdown(index=False, floatfmt=("", ".6f", ".3f")))
+
+    n_top = (y_true >= y_true.quantile(HIGH_VOL_QUANTILE)).sum()
+    n_rest = len(y_true) - n_top
+    print(f"\n---(top {1 - HIGH_VOL_QUANTILE:.0%} of target rows: "
+          f"{n_top:,} top vs. {n_rest:,} rest)---")
+    print(quantile_table.to_markdown(
+        index=False,
+        floatfmt=("", ".6f", ".6f", ".3f", ".3f", ".6f", ".6f"),
+    ))
