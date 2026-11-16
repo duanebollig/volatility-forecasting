@@ -102,13 +102,38 @@ The three models go from simplest to most flexible: a baseline with no learning 
 
 **HAR**: Corsi's Heterogeneous Autoregressive model (HAR-RV) for realized volatility:
 
-$$\hat{y}_{t} = \beta_0 + \beta_{d}\text{daily}_{t} + \beta_{w}\text{weekly}_{t} + \beta_{m}\text{monthly}_{t}$$ 
+$$\hat{y}_{t} = \beta_0 + \beta_{d}\text{daily}_{t} + \beta_{w}\text{weekly}_{t} + \beta_{m}\text{monthly}_{t}$$
 
 The coefficients $(\beta)$ are fit by OLS on the training rows, refit every fold. Forecasts below the training minimum of $y$ are raised to it (never happened across all 5,315 forecasts). This model uses daily squared returns in place of intraday realized variance from Corsi's model.
 
 **LightGBM**: Nonlinear ML model that uses gradient-boosted regression trees: a sequence of trees, each fit to correct the errors of the ones before it, with their outputs added together.
 
 Its hyperparameters are the defaults (100 trees, 31 leaves, learning rate 0.1, min 20 rows per leaf). The settings were fixed before seeing any results, because choosing them by test score would leak the test data into the model choice. LightGBM can't extrapolate: its splits are thresholds learned from the training data, so inputs beyond the training range get the same forecast as the most extreme training rows, keeping forecasts at about the largest (or smallest) $y$ it has seen.
+
+## Results
+Before running the forecasts, I predicted LightGBM would beat HAR on both metrics because as a nonlinear model, LightGBM could capture patterns that HAR could not. From 5,315 out-of-sample forecasts,
+the mean target was 0.000145 (≈ 1.2% daily volatility). Scores of each model's metrics are shown (best in bold):
+
+| model    |     rmse |   qlike |
+|:---------|---------:|--------:|
+| Naive    | 0.000341 |   1.101 |
+| HAR      | **0.000319** |   **0.457** |
+| LightGBM | 0.000375 |   0.501 |
+
+So the prediction was wrong. HAR beats out LightGBM with a ~15% lower RMSE and a ~9% lower QLIKE. Against the naive forecasts: HAR had a 6.4% lower RMSE and 58.5% lower QLIKE; LightGBM had a 10.1% higher RMSE and 54.5% lower QLIKE.
+
+### What failed: extrapolation hypothesis
+Since LightGBM can't forecast beyond its training range (see Models), I expected its losses to come mostly from the most volatile weeks. To test this, the forecasts were split into the top 5% of target weeks (266) and the rest (5,049), with the threshold set before seeing the results:
+
+| model    |   rmse_top |   rmse_rest |   qlike_top |   qlike_rest |   bias_top |   bias_rest |
+|:---------|-----------:|------------:|------------:|-------------:|-----------:|------------:|
+| Naive    |   0.001418 |    0.000128 |       2.043 |        1.052 |  -0.000216 |    0.000011 |
+| HAR      |   0.001355 |    0.000103 |       1.338 |        0.411 |  -0.000396 |    0.000029 |
+| LightGBM |   0.001468 |    0.000187 |       1.989 |        0.423 |  -0.000426 |    0.000031 |
+
+So the hypothesis was mostly wrong. On normal weeks, LightGBM's RMSE is ~81% worse than HAR's, compared with ~8% worse on the top weeks. The one partial exception is QLIKE, where the gap comes mostly from the top weeks (1.989 vs. 1.338, against 0.423 vs. 0.411 on the rest). Every model's bias on the top weeks is negative, so all three forecast too low when the volatility spikes.
+
+One question remains: why does LightGBM miss more on normal weeks? It's untested; the regression tree property of LightGBM could be the cause, because a tree jumps between leaf values instead of moving smoothly, so a small change in features can cause a big jump in the forecast.
 
 ## References
 [^corsi]: Corsi, F. (2009). "A Simple Approximate Long-Memory Model of Realized Volatility." *Journal of Financial Econometrics*, 7(2), 174–196.
