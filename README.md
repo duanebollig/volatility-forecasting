@@ -135,6 +135,23 @@ So the hypothesis was mostly wrong. On normal weeks, LightGBM's RMSE is ~81% wor
 
 One question remains: why does LightGBM miss more on normal weeks? It's untested; the regression tree property of LightGBM could be the cause, because a tree jumps between leaf values instead of moving smoothly, so a small change in features can cause a big jump in the forecast.
 
+## Reproduce
+To reproduce the results from scratch:
+
+```bash
+git clone https://github.com/duanebollig/volatility-forecasting
+cd volatility-forecasting
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python download.py
+pytest
+python evaluate.py
+python plot_vol.py # Optional: creates a volatility figure for the data
+```
+
+Requires Python 3.13. Re-downloading adds newer trading days, so numbers will shift slightly from those above (see Data).
+
 ## References
 [^corsi]: Corsi, F. (2009). "A Simple Approximate Long-Memory Model of Realized Volatility." *Journal of Financial Econometrics*, 7(2), 174–196.
 [^patton]: Patton, A. J. (2011). "Volatility Forecast Comparison Using Imperfect Volatility Proxies." *Journal of Econometrics*, 160(1), 246–256.
