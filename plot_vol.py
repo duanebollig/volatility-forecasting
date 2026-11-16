@@ -19,12 +19,14 @@ def to_annual_vol[T: (pd.Series, pd.DataFrame)](x: T) -> T:
 
 
 def plot_volatility(vol: pd.Series, title: str, path: Path) -> None:
-    fig, ax = plt.subplots()
-    ax.plot(vol, lw=1)
+    fig, ax = plt.subplots(figsize=(10,5))
+    ax.plot(vol, lw=1.5, color="black")
     ax.yaxis.set_major_formatter(PercentFormatter(xmax=1, decimals=0))
+    ax.grid(linestyle=":", alpha=0.3)
+    ax.margins(x=0)
     ax.set_title(title)
     ax.set_ylabel("Annualized volatility")
-    fig.savefig(path)
+    fig.savefig(path, dpi=200, bbox_inches="tight")
 
 
 def plot_preds_on_vol(y_true: pd.Series, model_preds: pd.DataFrame, title: str, path: Path) -> None:
@@ -35,6 +37,7 @@ def plot_preds_on_vol(y_true: pd.Series, model_preds: pd.DataFrame, title: str, 
     ax.yaxis.set_major_formatter(PercentFormatter(xmax=1, decimals=0))
     ax.xaxis.set_major_formatter(DateFormatter("%b"))
     ax.grid(linestyle=":", alpha=0.3)
+    ax.margins(x=0)
     ax.set_title(title)
     ax.set_ylabel("Annualized volatility")
     ax.legend()
@@ -46,7 +49,7 @@ if __name__ == "__main__":
     X, y = build_dataset(ticker)
     plot_volatility(
         to_annual_vol(X["monthly"]),
-        f"{ticker} 22-day realized volatility (annualized)",
+        f"{ticker} 22-day realized volatility, 2000-2026",
         FIGURES_DIR / f"{ticker.lower()}_realized_vol.png",
     )
     preds, y_true = get_predictions(models)
