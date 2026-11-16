@@ -72,7 +72,7 @@ if __name__ == "__main__":
     table = build_table(preds, y_true)
     quantile_table = build_quantile_table(preds, y_true)
 
-    print(f"---({len(y_true):,} out-of-sample forecasts)---")
+    print(f"---({len(y_true):,} out-of-sample forecasts, mean target: {y_true.mean():.6f})---")
     print(table.to_markdown(index=False, floatfmt=("", ".6f", ".3f")))
 
     n_top = (y_true >= y_true.quantile(HIGH_VOL_QUANTILE)).sum()
