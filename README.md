@@ -13,6 +13,10 @@ Daily SPY closes from 2000-01-01 to 2026-10-28, from yfinance. Closes are divide
 
 - 5,315 out-of-sample forecasts (first 1,400 rows train, 4-row gap to prevent look-ahead leakage)
 
+SPY's 22-day realized volatility (annualized) over the full sample. Long calm stretches are broken by short bursts, with the largest peaks in 2008 and 2020:
+
+![SPY 22-day realized volatility, annualized, 2000 to 2026. Mostly between 10% and 30%, with spikes near 90% in late 2008 and March 2020.](figures/spy_realized_vol.png)
+
 `data/` isn't committed, so run `download.py` first. Re-downloading later adds newer days, so numbers shift slightly.
 
 ## Target
@@ -133,6 +137,10 @@ Since LightGBM can't forecast beyond its training range (see Models), I expected
 
 So the hypothesis was mostly wrong. On normal weeks, LightGBM's RMSE is ~81% worse than HAR's, compared with ~8% worse on the top weeks. The one partial exception is QLIKE, where the gap comes mostly from the top weeks (1.989 vs. 1.338, against 0.423 vs. 0.411 on the rest). Every model's bias on the top weeks is negative, so all three forecast too low when the volatility spikes.
 
+The COVID window (Jan–Jun 2020) shows this. HAR and LightGBM rise about a week after realized volatility, peak well below it, and stay high after it falls:
+
+![HAR and LightGBM forecasts vs. realized next-5-day volatility, January to June 2020. Realized volatility peaks near 134% in March; both forecasts rise about a week later, peak near 100%, and stay above realized volatility through April.](figures/spy_forecasts_2020.png)
+
 One question remains: why does LightGBM miss more on normal weeks? It's untested; the regression tree property of LightGBM could be the cause, because a tree jumps between leaf values instead of moving smoothly, so a small change in features can cause a big jump in the forecast.
 
 ## Reproduce
@@ -147,7 +155,7 @@ pip install -r requirements.txt
 python download.py
 pytest
 python evaluate.py
-python plot_vol.py # Optional: creates a volatility figure for the data
+python plot_vol.py # Optional: creates two volatility figures in figures/
 ```
 
 Requires Python 3.13. Re-downloading adds newer trading days, so numbers will shift slightly from those above (see Data).
